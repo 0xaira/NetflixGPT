@@ -2,18 +2,75 @@ import { useState, useRef } from "react";
 import Header from "./Header";
 import poster from '../assets/background.jpg';
 import { checkValidData } from '../utils/validate';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+// import { updateProfile } from "firebase/auth";
+// import { useDispatch } from "react-redux";
+// import { addUser } from "../utils/userSlice";
 
+
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const email = useRef(null);
   const password = useRef(null);
   const name = useRef(null);
+  const navigate = useNavigate();
+  // const dispatch = useDispatch();
   const [errorMessage, seterrorMessage] = useState(null);
   const handleButtonClick = () => {
     const message = checkValidData(email.current.value, password.current.value);
     seterrorMessage(message);
     if (message) return;
+
+    const auth = getAuth();
+
+
+    if (!isSignInForm) {
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          seterrorMessage(errorCode + "-" + errorMessage);
+          // ..
+        });
+    } else {
+      signInWithEmailAndPassword(auth, email.current.value, password.current.value)
+        .then((userCredential) => {
+
+          const user = userCredential.user;
+          navigate("/browse");
+
+        })
+        .catch((error) => {
+          seterrorMessage(error.message);
+        });
+    }
   }
 
 
