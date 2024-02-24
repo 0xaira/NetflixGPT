@@ -1,14 +1,14 @@
 import { useState, useRef } from "react";
 import Header from "./Header";
-import poster from '../assets/background.jpg';
 import { checkValidData } from '../utils/validate';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-// import { updateProfile } from "firebase/auth";
-// import { useDispatch } from "react-redux";
-// import { addUser } from "../utils/userSlice";
-
-
+import { updateProfile } from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
+import LandingPage from "./LandingPage/LandingPage";
+import background from "../assets/background.jpg";
+import profile from "../assets/profile.webp";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -33,7 +33,7 @@ const Login = () => {
   const password = useRef(null);
   const name = useRef(null);
   const navigate = useNavigate();
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const [errorMessage, seterrorMessage] = useState(null);
   const handleButtonClick = () => {
     const message = checkValidData(email.current.value, password.current.value);
@@ -51,19 +51,35 @@ const Login = () => {
       )
         .then((userCredential) => {
           const user = userCredential.user;
-
+          updateProfile(user, {
+            displayName: name.current.value,
+            photoURL: {profile},
+          })
+          .then(() => {
+            navigate("/browse");
+            const { uid, email, displayName, photoURL } = auth.currentUser;
+            dispatch(
+              addUser({
+                uid: uid,
+                email: email,
+                displayName: displayName,
+                photoURL: photoURL,
+              })
+            );
+          })
+            .catch((error) => {
+              seterrorMessage(error.message);
+            });
         })
         .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          seterrorMessage(errorCode + "-" + errorMessage);
-          // ..
+          seterrorMessage(error.message);
         });
     } else {
       signInWithEmailAndPassword(auth, email.current.value, password.current.value)
         .then((userCredential) => {
 
           const user = userCredential.user;
+          console.log(user);
           navigate("/browse");
 
         })
@@ -79,13 +95,13 @@ const Login = () => {
   };
 
   return (
+    <>
+    
+    <div className="flex flex-col gap-[50rem]">
     <div>
       <Header />
-      <div className="relative">
-        <div className="absolute w-full">
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-          <img src={poster} alt='poster' className='w-full' style={{ zIndex: 0 }} />
-        </div>
+      <div className="absolute">
+        <img src={background} alt='poster' className='w-full' />
       </div>
       <form
         onSubmit={(e) => e.preventDefault()}
@@ -140,6 +156,9 @@ const Login = () => {
         </p>
       </form>
     </div>
+    <div className="className='w-[100%] bg-black border-t-[8px] border-t-[#605d5d] sm:py - [100px] py-[50px]"><LandingPage /></div>
+    </div>
+    </>
   );
 };
 

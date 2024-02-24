@@ -6,7 +6,6 @@ const LandingPage = () => {
   return (
     <>
     <div className='bg-black'>
-    <LandingPageHeader/>
     <LandingPageBody/>
     <LandingPageFooter/>
     </div>
